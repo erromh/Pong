@@ -16,7 +16,7 @@ const SPEED = 0.5;
 
 const normalizeVector = (vector) => {
   // length of the vector
-  //const magnite = 
+  //const magnite
 }
 
 export default function App() {

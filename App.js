@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { StyleSheet, Text, useAnimatedValue, View } from 'react-native';
+import { StyleSheet, Text, useAnimatedValue, useWindowDimensions, View } from 'react-native';
 import  Animated, { 
   Easing,
   useAnimatedStyle, 
@@ -8,24 +8,31 @@ import  Animated, {
   withTiming
  }  from 'react-native-reanimated';
 
- // 47:10 - time code on video
+ // 59:40 - time code on video
 
 const FPS = 60;
 const DELTA = 1000 / FPS;
-const SPEED = 0.5;
+const SPEED = 10;
 
 const normalizeVector = (vector) => {
   // length of the vector
-  //const magnite
+  const magnite = Math.sqrt(vector.x * vector.x + vector.y * vector.y)
+
+return({
+
+  x: vector.x / magnite,
+  y: vector.y / magnite,
+})
+
 }
 
 export default function App() {
 
-const targetPositionX = useSharedValue(0);
-const targetPositionY = useSharedValue(0);
+const targetPositionX = useSharedValue(200);
+const targetPositionY = useSharedValue(200);
 
-const direction = useSharedValue({ x: 1, y: 0});
-
+const direction = useSharedValue(normalizeVector({x: Math.random(), y: Math.random()}));
+const {height, width} = useWindowDimensions();
 
 useEffect(()=>{
   const interval = setInterval(update, DELTA);
@@ -34,21 +41,26 @@ useEffect(()=>{
 
 
 const update = ()=> {
+
+  const nextX = targetPositionX.value + direction.value.x * SPEED;
+  const nextY = targetPositionY.value + direction.value.y * SPEED;
   
-targetPositionX.value = withTiming
-(
-  targetPositionX.value + directionX.value * SPEED, 
-  {
+  if(nextY < 0 || nextY > height) {
+    direction.value = {x: direction.value.x, y: -direction.value.y};
+  }
+  
+  if(nextX < 0 || nextX > width) {
+    direction.value = {x: -direction.value.x, y: direction.value.y};
+  }
+
+  targetPositionX.value = withTiming(nextX, {
     duration: DELTA,
     easing: Easing.linear,
   }
 
 );
 
-targetPositionY.value = withTiming
-(
-  targetPositionY.value + directionY.value * SPEED,
-  {
+targetPositionY.value = withTiming(nextY, {
     duration: DELTA,
     easing: Easing.linear,
   }

@@ -87,7 +87,7 @@ export default function Game() {
       newDirection = { x: -direction.value.x, y: direction.value.y };
     }
 
-    // Island Hit detection
+    // Island Hit detectio
     if (
       nextPos.x < islandDimensions.x + islandDimensions.w &&
       nextPos.x + BALL_WIDTH > islandDimensions.x &&

@@ -25,10 +25,10 @@ import {
 
 const FPS = 60;
 const DELTA = 1000 / FPS;
-const SPEED = 10;
+const SPEED = 20;
 const BALL_WIDTH = 25;
 
-const islandDimensions = { x: 150, y: 11, w: 127, h: 37 };
+const islandDimensions = { x: 95, y: 50, w: 200, h: 30 };
 
 const normalizeVector = (vector) => {
   const magnitude = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
@@ -42,8 +42,8 @@ const normalizeVector = (vector) => {
 export default function Game() {
   const { height, width } = useWindowDimensions();
   const playerDimensions = {
-    w: width / 2,
-    h: 37,
+    w: width/2,
+    h: 30,
   };
 
   const [score, setScore] = useState(0);
@@ -54,7 +54,7 @@ export default function Game() {
   const direction = useSharedValue(
     normalizeVector({ x: Math.random(), y: Math.random() })
   );
-  const playerPos = useSharedValue({ x: width / 4, y: height - 100 });
+  const playerPos = useSharedValue({ x: width / 4, y: height - 50 });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -70,10 +70,15 @@ export default function Game() {
     let nextPos = getNextPos(direction.value);
     let newDirection = direction.value;
 
+
     // Wall Hit detection
     if (nextPos.y > height - BALL_WIDTH) {
       setGameOver(true);
     }
+    if (nextPos.y <= BALL_WIDTH) {
+      setGameOver(true);
+    }
+    
     if (nextPos.y < 0) {
       newDirection = { x: direction.value.x, y: -direction.value.y };
     }
@@ -97,7 +102,7 @@ export default function Game() {
       } else {
         newDirection = { x: direction.value.x, y: -direction.value.y };
       }
-      setScore((s) => s + 1);
+      //setScore((s) => s + 1);
     }
 
     // Player Hit detection
@@ -106,6 +111,7 @@ export default function Game() {
       nextPos.x + BALL_WIDTH > playerPos.value.x &&
       nextPos.y < playerPos.value.y + playerDimensions.h &&
       BALL_WIDTH + nextPos.y > playerPos.value.y
+
     ) {
       if (
         targetPositionX.value < playerPos.value.x ||
@@ -202,11 +208,11 @@ export default function Game() {
           width: islandDimensions.w,
           height: islandDimensions.h,
           borderRadius: 20,
-          backgroundColor: "black",
+          backgroundColor: "blue",
         }}
       />
 
-      {/* Player */}
+      {/* Players */}
       <Animated.View
         style={[
           {
@@ -215,7 +221,7 @@ export default function Game() {
             width: playerDimensions.w,
             height: playerDimensions.h,
             borderRadius: 20,
-            backgroundColor: "black",
+            backgroundColor: "blue",
           },
           playerAnimatedStyles,
         ]}
@@ -225,7 +231,7 @@ export default function Game() {
         <Animated.View
           style={{
             width: "100%",
-            height: 200,
+            height: 300,
             position: "absolute",
             bottom: 0,
           }}
@@ -243,19 +249,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   ball: {
-    backgroundColor: "black",
+    backgroundColor: "red",
     width: BALL_WIDTH,
     aspectRatio: 1,
     borderRadius: 25,
     position: "absolute",
   },
-  score: {
-    fontSize: 150,
-    fontWeight: "500",
-    position: "absolute",
-    top: 150,
-    color: "lightgray",
-  },
+  
   gameOverContainer: {
     position: "absolute",
     top: 350,
@@ -263,6 +263,6 @@ const styles = StyleSheet.create({
   gameOver: {
     fontSize: 50,
     fontWeight: "500",
-    color: "red",
+    color: "pink",
   },
 });

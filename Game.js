@@ -25,14 +25,16 @@ import {
 
 const FPS = 60;
 const DELTA = 1000 / FPS;
-const SPEED = 20;
+const INITIALSPEED = 20;
 const BALL_WIDTH = 25;
+var tics=0; 
+var speedCurrent = 20;
+const ACCELERATION =2;
 
-const islandDimensions = { x: 95, y: 50, w: 200, h: 30 };
+var islandDimensions = { x: 95, y: 50, w: 200, h: 30 };
 
 const normalizeVector = (vector) => {
   const magnitude = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-
   return {
     x: vector.x / magnitude,
     y: vector.y / magnitude,
@@ -48,6 +50,7 @@ export default function Game() {
 
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(true);
+  const [winner, setWinner] = useState(true);
 
   const targetPositionX = useSharedValue(width / 2);
   const targetPositionY = useSharedValue(height / 2);
@@ -58,25 +61,37 @@ export default function Game() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!gameOver) {
+      if (!gameOver && !winner) {
         update();
       }
     }, DELTA);
 
     return () => clearInterval(interval);
-  }, [gameOver]);
+  }, [gameOver, winner]);
+
+  const acceleration=(tics)=> {    
+    let timeOff = tics/360;
+    let speedCurrent = INITIALSPEED + ACCELERATION*timeOff;  
+    return speedCurrent; 
+  }
 
   const update = () => {
-    let nextPos = getNextPos(direction.value);
     let newDirection = direction.value;
 
-
+    tics++;
+    speedCurrent = acceleration(tics)
+    
+    islandDimensions = changePosition(tics)
+   
     // Wall Hit detection
     if (nextPos.y > height - BALL_WIDTH) {
+      console.log("помер снизу")
       setGameOver(true);
     }
+
     if (nextPos.y <= BALL_WIDTH) {
-      setGameOver(true);
+      console.log("помер сверху")
+      setWinner(true);
     }
     
     if (nextPos.y < 0) {
@@ -102,7 +117,6 @@ export default function Game() {
       } else {
         newDirection = { x: direction.value.x, y: -direction.value.y };
       }
-      //setScore((s) => s + 1);
     }
 
     // Player Hit detection
@@ -111,8 +125,9 @@ export default function Game() {
       nextPos.x + BALL_WIDTH > playerPos.value.x &&
       nextPos.y < playerPos.value.y + playerDimensions.h &&
       BALL_WIDTH + nextPos.y > playerPos.value.y
-
-    ) {
+    ) 
+    
+    {
       if (
         targetPositionX.value < playerPos.value.x ||
         targetPositionX.value > playerPos.value.x + playerDimensions.w
@@ -130,6 +145,7 @@ export default function Game() {
       duration: DELTA,
       easing: Easing.linear,
     });
+    
     targetPositionY.value = withTiming(nextPos.y, {
       duration: DELTA,
       easing: Easing.linear,
@@ -138,17 +154,27 @@ export default function Game() {
 
   const getNextPos = (direction) => {
     return {
-      x: targetPositionX.value + direction.x * SPEED,
-      y: targetPositionY.value + direction.y * SPEED,
+      x: targetPositionX.value + direction.x * speedCurrent,
+      y: targetPositionY.value + direction.y * speedCurrent,
     };
   };
+
+  var nextPos = getNextPos(direction.value);
 
   const restartGame = () => {
     targetPositionX.value = width / 2;
     targetPositionY.value = height / 2;
-    setScore(0);
     setGameOver(false);
+    setWinner(false);
+    tics = 0;
   };
+
+  const changePosition = (tics)=> {
+    var islandDimensions;
+
+    islandDimensions = { x: 90, y: 50, w: 200, h: 30 };
+    return islandDimensions;
+  }
 
   const ballAnimatedStyles = useAnimatedStyle(() => {
     return {
@@ -158,11 +184,13 @@ export default function Game() {
   });
 
   const islandAnimatedStyles = useAnimatedStyle(
+
     () => ({
       width: withSequence(
         withTiming(islandDimensions.w * 1.3),
         withTiming(islandDimensions.w)
       ),
+
       height: withSequence(
         withTiming(islandDimensions.h * 1.3),
         withTiming(islandDimensions.h)
@@ -187,15 +215,24 @@ export default function Game() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.score}>{score}</Text>
+
       {gameOver && (
         <View style={styles.gameOverContainer}>
           <Text style={styles.gameOver}>Game over</Text>
           <Button title="Restart" onPress={restartGame} />
         </View>
       )}
-
       {!gameOver && <Animated.View style={[styles.ball, ballAnimatedStyles]} />}
+
+
+      {winner && (
+        <View style={styles.winnerContainer}>
+          <Text style={styles.winner}>You win!</Text>
+          <Button title="Restart" onPress={restartGame} />
+        </View>
+      )}
+      {!winner && <Animated.View style={[styles.ball, ballAnimatedStyles]} />}
+
 
       {/* Island */}
       <Animated.View
@@ -265,4 +302,14 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "pink",
   },
+
+  winnerContainer: {
+    position: "absolute",
+    top: 350,
+  },
+  winner:{
+    fontSize: 50,
+    fontWeight: "500",
+    color: "yellow",
+  }
 });
